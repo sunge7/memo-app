@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - 메모 앱</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .signup-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 40px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .signup-title {
+            margin-bottom: 30px;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .signup-btn, .back-btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .signup-btn {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .signup-btn:hover {
+            background-color: #27ae60;
+        }
+
+        .back-btn {
+            background-color: #f1f1f1;
+            color: #333;
+        }
+
+        .back-btn:hover {
+            background-color: #e0e0e0;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+    </style>
+    <!-- Firebase 스크립트 추가 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC8XUFvgXtUWcBsgsO6qO-oMiKzzvXSzso",
+            authDomain: "vibe-dcoding-backend.firebaseapp.com",
+            databaseURL: "https://vibe-dcoding-backend-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "vibe-dcoding-backend",
+            storageBucket: "vibe-dcoding-backend.firebasestorage.app",
+            messagingSenderId: "661196218325",
+            appId: "1:661196218325:web:7d78853b473ddf6053275c"
+        };
+
+        // Firebase 초기화
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        // 회원가입 버튼 이벤트
+        document.getElementById('signup-btn').addEventListener('click', async () => {
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const errorMessage = document.getElementById('error-message');
+
+            // 입력값 검증
+            if (!username || !email || !password || !confirmPassword) {
+                errorMessage.textContent = '모든 필드를 입력해주세요.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                errorMessage.textContent = '비밀번호가 일치하지 않습니다.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            if (password.length < 6) {
+                errorMessage.textContent = '비밀번호는 6자 이상이어야 합니다.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            try {
+                // 사용자 생성
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // 사용자 프로필 업데이트
+                await updateProfile(user, {
+                    displayName: username
+                });
+
+                // 사용자 정보를 데이터베이스에 저장
+                const userRef = ref(database, `users/${user.uid}`);
+                await set(userRef, {
+                    username: username,
+                    email: email,
+                    createdAt: new Date().toISOString()
+                });
+
+                console.log('회원가입 성공:', user);
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('회원가입 에러:', error);
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage.textContent = '이미 사용 중인 이메일입니다.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage.textContent = '유효하지 않은 이메일 형식입니다.';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage.textContent = '비밀번호가 너무 약합니다.';
+                } else {
+                    errorMessage.textContent = '회원가입에 실패했습니다: ' + error.message;
+                }
+                errorMessage.style.display = 'block';
+            }
+        });
+
+        // 뒤로가기 버튼 이벤트
+        document.getElementById('back-btn').addEventListener('click', () => {
+            window.location.href = 'login.html';
+        });
+    </script>
+</head>
+<body>
+    <div class="signup-container">
+        <h1 class="signup-title">회원가입</h1>
+        <div class="form-group">
+            <label for="username">사용자 이름</label>
+            <input type="text" id="username" placeholder="사용자 이름을 입력하세요">
+        </div>
+        <div class="form-group">
+            <label for="email">이메일</label>
+            <input type="email" id="email" placeholder="이메일을 입력하세요">
+        </div>
+        <div class="form-group">
+            <label for="password">비밀번호</label>
+            <input type="password" id="password" placeholder="비밀번호를 입력하세요">
+        </div>
+        <div class="form-group">
+            <label for="confirm-password">비밀번호 확인</label>
+            <input type="password" id="confirm-password" placeholder="비밀번호를 다시 입력하세요">
+        </div>
+        <div id="error-message" class="error-message"></div>
+        <div class="button-group">
+            <button id="back-btn" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                뒤로가기
+            </button>
+            <button id="signup-btn" class="signup-btn">
+                <i class="fas fa-user-plus"></i>
+                회원가입
+            </button>
+        </div>
+    </div>
+</body>
+</html> 

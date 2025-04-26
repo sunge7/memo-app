@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>메모 앱</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>메모 앱</h1>
+        <div class="memo-form">
+            <input type="text" id="memo-title" placeholder="제목을 입력하세요">
+            <textarea id="memo-content" placeholder="내용을 입력하세요"></textarea>
+            <div class="form-footer">
+                <label class="important-label">
+                    <input type="checkbox" id="memo-important">
+                    중요 메모
+                </label>
+                <button id="save-btn">저장</button>
+            </div>
+        </div>
+        <div class="memo-list">
+            <h2>저장된 메모</h2>
+            <div id="memos"></div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
